@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIformers — Governed AI-Human Workflow Engine</title>
+  <meta name="description" content="An open-source governed engine for AI-human workflow orchestration. Every workflow clears a mandatory classification gate before execution. Apache 2.0.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink:      #0b0c0e;
+      --ink-2:    #14161a;
+      --ink-3:    #1e2128;
+      --ink-4:    #252933;
+      --mist:     #5a6070;
+      --fog:      #8a93a8;
+      --paper:    #dde3f0;
+      --paper-2:  #b0bace;
+      --amber:    #c47a1e;
+      --amber-lo: rgba(196,122,30,0.12);
+      --amber-bdr: rgba(196,122,30,0.3);
+      --green:    #3a9e6a;
+      --rule:     rgba(255,255,255,0.06);
+
+      --mono: 'IBM Plex Mono', monospace;
+      --sans: 'IBM Plex Sans', sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--mono);
+      background: var(--ink);
+      color: var(--paper);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(11,12,14,0.94);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--rule);
+      padding: 0 clamp(1.5rem, 5vw, 5rem);
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .nav-logo {
+      font-size: 0.85rem;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      color: var(--paper);
+      text-decoration: none;
+    }
+
+    .nav-logo span { color: var(--amber); }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .nav-right a {
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      color: var(--fog);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .nav-right a:hover { color: var(--paper); }
+
+    .nav-badge {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      color: var(--amber);
+      border: 1px solid var(--amber-bdr);
+      padding: 0.2rem 0.6rem;
+      border-radius: 2px;
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      padding: 8rem clamp(1.5rem, 5vw, 5rem) 5rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Terminal grid bg — the signature element for this page */
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--rule) 1px, transparent 1px),
+        linear-gradient(90deg, var(--rule) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 50%, black, transparent);
+      pointer-events: none;
+    }
+
+    .hero-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      color: var(--amber);
+      margin-bottom: 2rem;
+    }
+
+    .status-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--amber);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.2; }
+    }
+
+    .hero-name {
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 300;
+      letter-spacing: -0.03em;
+      line-height: 0.95;
+      margin-bottom: 1.5rem;
+      font-family: var(--mono);
+    }
+
+    .hero-name span {
+      color: var(--amber);
+      font-weight: 500;
+    }
+
+    .hero-tagline {
+      font-family: var(--sans);
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-weight: 300;
+      color: var(--fog);
+      max-width: 52ch;
+      line-height: 1.65;
+      margin-bottom: 3rem;
+    }
+
+    .hero-cta-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--amber);
+      color: var(--ink);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      padding: 0.7rem 1.4rem;
+      text-decoration: none;
+      border-radius: 2px;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover { background: #d4891e; }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--fog);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      padding: 0.7rem 1.4rem;
+      text-decoration: none;
+      border: 1px solid var(--ink-3);
+      border-radius: 2px;
+      transition: border-color 0.15s, color 0.15s;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--fog);
+      color: var(--paper);
+    }
+
+    /* ── SECTION ── */
+    section {
+      padding: 5rem clamp(1.5rem, 5vw, 5rem);
+      border-top: 1px solid var(--rule);
+    }
+
+    .eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--mist);
+      margin-bottom: 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .eyebrow::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rule);
+      max-width: 200px;
+    }
+
+    /* ── WHY SECTION ── */
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1px;
+      background: var(--rule);
+    }
+
+    .why-card {
+      background: var(--ink-2);
+      padding: 2rem;
+    }
+
+    .why-card-num {
+      font-size: 0.65rem;
+      letter-spacing: 0.15em;
+      color: var(--mist);
+      margin-bottom: 1rem;
+    }
+
+    .why-card h3 {
+      font-family: var(--sans);
+      font-size: 1rem;
+      font-weight: 500;
+      margin-bottom: 0.6rem;
+      color: var(--paper);
+    }
+
+    .why-card p {
+      font-family: var(--sans);
+      font-size: 0.85rem;
+      color: var(--fog);
+      line-height: 1.65;
+    }
+
+    /* ── ARCHITECTURE ── */
+    .arch-section { background: var(--ink-2); }
+
+    .arch-layout {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 4rem;
+      align-items: start;
+    }
+
+    .arch-text h2 {
+      font-family: var(--sans);
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin-bottom: 1rem;
+    }
+
+    .arch-text p {
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      color: var(--fog);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+    }
+
+    .arch-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .arch-layer {
+      border: 1px solid var(--ink-4);
+      padding: 1rem 1.25rem;
+      position: relative;
+    }
+
+    .arch-layer + .arch-layer {
+      border-top: none;
+    }
+
+    .arch-layer.highlight {
+      border-color: var(--amber-bdr);
+      background: var(--amber-lo);
+    }
+
+    .layer-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--mist);
+      margin-bottom: 0.3rem;
+    }
+
+    .arch-layer.highlight .layer-label {
+      color: var(--amber);
+    }
+
+    .layer-name {
+      font-size: 0.88rem;
+      font-weight: 500;
+      color: var(--paper);
+      margin-bottom: 0.2rem;
+    }
+
+    .layer-desc {
+      font-family: var(--sans);
+      font-size: 0.78rem;
+      color: var(--fog);
+    }
+
+    .layer-products {
+      margin-top: 0.5rem;
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .layer-tag {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      padding: 0.15rem 0.5rem;
+      border-radius: 2px;
+      border: 1px solid var(--ink-4);
+      color: var(--mist);
+    }
+
+    /* ── REPOS ── */
+    .repos-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      background: var(--rule);
+    }
+
+    .repo-row {
+      background: var(--ink);
+      display: grid;
+      grid-template-columns: 2fr 3fr auto;
+      align-items: center;
+      gap: 2rem;
+      padding: 1rem 1.25rem;
+      text-decoration: none;
+      transition: background 0.12s;
+    }
+
+    .repo-row:hover { background: var(--ink-2); }
+
+    .repo-name {
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--paper);
+    }
+
+    .repo-desc {
+      font-family: var(--sans);
+      font-size: 0.8rem;
+      color: var(--fog);
+    }
+
+    .repo-status {
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.6rem;
+      border-radius: 2px;
+      white-space: nowrap;
+    }
+
+    .repo-status.active {
+      background: rgba(58,158,106,0.12);
+      color: var(--green);
+      border: 1px solid rgba(58,158,106,0.25);
+    }
+
+    .repo-status.soon {
+      background: var(--amber-lo);
+      color: var(--amber);
+      border: 1px solid var(--amber-bdr);
+    }
+
+    /* ── BUILT ON ── */
+    .built-band {
+      border-top: 1px solid var(--rule);
+      padding: 3rem clamp(1.5rem, 5vw, 5rem);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .built-band p {
+      font-family: var(--sans);
+      font-size: 0.88rem;
+      color: var(--fog);
+    }
+
+    .built-band a {
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      color: var(--amber);
+      text-decoration: none;
+      border: 1px solid var(--amber-bdr);
+      padding: 0.5rem 1rem;
+      border-radius: 2px;
+      transition: background 0.15s;
+    }
+
+    .built-band a:hover { background: var(--amber-lo); }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--rule);
+      padding: 2rem clamp(1.5rem, 5vw, 5rem);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .footer-left {
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      color: var(--mist);
+    }
+
+    .footer-left span { color: var(--amber); }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+      color: var(--mist);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+
+    .footer-links a:hover { color: var(--fog); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .arch-layout { grid-template-columns: 1fr; }
+      .repo-row { grid-template-columns: 1fr auto; }
+      .repo-desc { display: none; }
+      .nav-right a:not(:last-child) { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .status-dot { animation: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="/" class="nav-logo">DI<span>formers</span></a>
+    <div class="nav-right">
+      <a href="#why">Why</a>
+      <a href="#architecture">Architecture</a>
+      <a href="#repos">Repos</a>
+      <a href="https://github.com/diformers">GitHub</a>
+      <span class="nav-badge">Apache 2.0</span>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-status">
+      <span class="status-dot"></span>
+      Pre-alpha — Architecture in progress — Wave 1: HR onboarding
+    </div>
+    <h1 class="hero-name">DI<span>formers</span></h1>
+    <p class="hero-tagline">
+      An open-source governed engine for AI-human workflow orchestration. Every workflow clears a mandatory classification gate before it executes. Not a setting. Not a policy. Enforced by the engine.
+    </p>
+    <div class="hero-cta-row">
+      <a href="https://github.com/diformers/diformers" class="btn-primary">★ View on GitHub</a>
+      <a href="https://alasts.ai" class="btn-ghost">Built by ALASTS →</a>
+    </div>
+  </div>
+
+  <!-- WHY -->
+  <section id="why">
+    <p class="eyebrow">Why DIformers</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <p class="why-card-num">01</p>
+        <h3>Governance in the engine</h3>
+        <p>The classification gate is mandatory and engine-enforced. Flow authors cannot skip it. This is the architectural identity — not a plugin, not a policy layer on top.</p>
+      </div>
+      <div class="why-card">
+        <p class="why-card-num">02</p>
+        <h3>Humans and AI as first-class participants</h3>
+        <p>Workflows are not scripts that occasionally call a human. Humans and AI agents share the work board as equals. The engine models both natively.</p>
+      </div>
+      <div class="why-card">
+        <p class="why-card-num">03</p>
+        <h3>Separate repos, separate concerns</h3>
+        <p>Core modules ship as independent repositories. Take the engine without the board. Use the governor without the full stack. No monolith forcing you into the full installation.</p>
+      </div>
+      <div class="why-card">
+        <p class="why-card-num">04</p>
+        <h3>Apache 2.0, genuinely</h3>
+        <p>No open core bait-and-switch. The engine and its modules are Apache 2.0. Products built on it — Chuyen and Rai — have Community editions that are real products, not demos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE -->
+  <section class="arch-section" id="architecture">
+    <p class="eyebrow">Architecture</p>
+    <div class="arch-layout">
+      <div class="arch-text">
+        <h2>One engine.<br>Two product layers.</h2>
+        <p>
+          DIformers is the foundation. Chuyen sits above it as an enterprise governed workflow platform. Rai sits above it as a personal AI assistant. Both inherit the engine's governance model. Neither could exist without it.
+        </p>
+        <p>
+          The separation is intentional: the engine is the independent open-source project. The products are where the commercial layer lives. You can use DIformers without either product.
+        </p>
+      </div>
+      <div class="arch-diagram">
+        <div class="arch-layer">
+          <div class="layer-label">Product layer</div>
+          <div class="layer-name">Chuyen &amp; Rai</div>
+          <div class="layer-desc">Enterprise platform + Personal assistant</div>
+          <div class="layer-products">
+            <span class="layer-tag">Community</span>
+            <span class="layer-tag">Commercial</span>
+          </div>
+        </div>
+        <div class="arch-layer highlight">
+          <div class="layer-label">Engine — this repo</div>
+          <div class="layer-name">DIformers core</div>
+          <div class="layer-desc">Flow execution + mandatory governance gate</div>
+          <div class="layer-products">
+            <span class="layer-tag">Apache 2.0</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="layer-label">Core modules</div>
+          <div class="layer-name">Governor · Board · Memory</div>
+          <div class="layer-desc">Independent repos — use what you need</div>
+          <div class="layer-products">
+            <span class="layer-tag">Apache 2.0</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="layer-label">Infrastructure</div>
+          <div class="layer-name">PostgreSQL · Self-hosted</div>
+          <div class="layer-desc">Multi-tenant, no cloud dependency required</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REPOS -->
+  <section id="repos">
+    <p class="eyebrow">Repositories</p>
+    <div class="repos-list">
+      <a href="https://github.com/diformers/diformers" class="repo-row">
+        <span class="repo-name">diformers/diformers</span>
+        <span class="repo-desc">Core engine runtime, flow execution, governance gate</span>
+        <span class="repo-status active">Active</span>
+      </a>
+      <a href="https://github.com/diformers" class="repo-row">
+        <span class="repo-name">diformers/governor</span>
+        <span class="repo-desc">Mandatory classification gate module</span>
+        <span class="repo-status soon">Coming</span>
+      </a>
+      <a href="https://github.com/diformers" class="repo-row">
+        <span class="repo-name">diformers/board</span>
+        <span class="repo-desc">Live human-AI work board</span>
+        <span class="repo-status soon">Coming</span>
+      </a>
+      <a href="https://github.com/diformers" class="repo-row">
+        <span class="repo-name">diformers/memory</span>
+        <span class="repo-desc">Persistent context and workflow state</span>
+        <span class="repo-status soon">Coming</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- BUILT ON BAND -->
+  <div class="built-band">
+    <p>Chuyen and Rai are built on DIformers. Community editions are real products — free and self-hosted.</p>
+    <a href="https://alasts.ai">See the full family →</a>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">
+      <span>DIformers</span> — Apache 2.0 &nbsp;·&nbsp;
+      By ALASTS &nbsp;·&nbsp;
+      Founded <span>13 July</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://github.com/diformers">GitHub</a>
+      <a href="https://alasts.ai">alasts.ai</a>
+      <a href="https://alasts.com">alasts.com</a>
+    </div>
+  </footer>
+
+</body>
+</html>
